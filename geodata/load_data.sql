@@ -10,7 +10,7 @@ SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
+-- SET standard_conforming_strings = ON;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET xmloption = content;
@@ -21,7 +21,7 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
-SET search_path TO public;
+SET search_path = public;
 
 create extension postgis;
 
