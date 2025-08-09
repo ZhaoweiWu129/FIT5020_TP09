@@ -20,5 +20,24 @@ services:
     ports:
       - "8000:8000"
 
+  graphhopper:
+    build: ./graphhopper
+    ports:
+      - "8989:8989"
+    environment:
+      - JAVA_OPTS=-Xmx4g
+    volumes:
+      - ./graphhopper/graph-cache:/data/graph-cache
+
+  # nominatim:
+  #   image: mediagis/nominatim:5.1
+  #   container_name: nominatim
+  #   environment:
+  #     - PBF_URL=file:///data/melb.osm.pbf
+  #   volumes:
+  #     - ./graphhopper/melb.osm.pbf:/data/melb.osm.pbf:ro
+  #   ports:
+  #     - "8080:8080"
+
 volumes:
   pgdata:

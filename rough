@@ -1,0 +1,11 @@
+docker run --rm -it \
+  -e PBF_URL=file:///data/melb.osm.pbf \
+  -v $(pwd)/graphhopper/melb.osm.pbf:/data/melb.osm.pbf:ro \
+  -p 8080:8080 \
+  --name nominatim \
+  mediagis/nominatim:5.1
+
+docker run --rm -it \
+ -e PBF_URL=file:///data/melb.osm.pbf \
+ -v $(pwd)/graphhopper/melb.osm.pbf:/data/melb.osm.pbf:ro \
+ mediagis/nominatim:5.1 import

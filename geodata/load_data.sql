@@ -23,6 +23,9 @@ SET default_table_access_method = heap;
 
 SET search_path = public;
 
+-- for nominatim
+CREATE DATABASE nominatim;
+
 create extension postgis;
 
 --
