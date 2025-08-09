@@ -29,6 +29,7 @@ services:
     volumes:
       - ./graphhopper/graph-cache:/data/graph-cache
 
+  ### Uncomment the following lines to enable Nominatim Geocoding service - initial run takes at least 5 minutes
   # nominatim:
   #   image: mediagis/nominatim:5.1
   #   container_name: nominatim

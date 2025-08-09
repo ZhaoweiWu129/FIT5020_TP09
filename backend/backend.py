@@ -27,6 +27,14 @@ class TrainStation(Base):
     geom = Column(Geometry('POINT', srid=7844))
     whlchr_accss = Column(Boolean)
 
+class OsmParkNRide(Base):
+    __tablename__ = "osm_park_and_ride"
+    id = Column(Integer, primary_key=True)
+    geom = Column(Geometry("MULTIPOLYGON", srid=7844))
+    zone_name = Column(String)
+    nearest_ts_id = Column(String)
+    other_tags = Column(String)
+
 class OsmPublicParking(Base):
     __tablename__ = "osm_public_parking"
     id = Column(Integer, primary_key=True)
@@ -50,7 +58,7 @@ def read_station(station_id: str):
         "wheelchair_accessible": bool(station.whlchr_accss)
     }
 
-class NearRouteStationsRequest(BaseModel):
+class NearRouteRequest(BaseModel):
 
     maxdistance: int = 500
     coordinates: list
@@ -59,102 +67,7 @@ class NearRouteStationsRequest(BaseModel):
         return shape({"type": "LineString", "coordinates": self.coordinates})
 
 @app.post("/stations/near_route")
-def stations_near_route(line: NearRouteStationsRequest):
-
-    """
-    {
-        "type": "LineString",
-        "coordinates": [
-          [
-            145.123387,
-            -37.906601
-          ],
-          [
-            145.123198,
-            -37.90658
-          ],
-          [
-            145.122415,
-            -37.910754
-          ],
-          [
-            145.122068,
-            -37.9127
-          ],
-          [
-            145.1219,
-            -37.913653
-          ],
-          [
-            145.121862,
-            -37.91397
-          ],
-          [
-            145.121667,
-            -37.915039
-          ],
-          [
-            145.120829,
-            -37.91937
-          ],
-          [
-            145.120843,
-            -37.919621
-          ],
-          [
-            145.12084,
-            -37.91975
-          ],
-          [
-            145.120797,
-            -37.920119
-          ],
-          [
-            145.120759,
-            -37.920336
-          ],
-          [
-            145.120706,
-            -37.920601
-          ],
-          [
-            145.120583,
-            -37.921012
-          ],
-          [
-            145.120512,
-            -37.921364
-          ],
-          [
-            145.120484,
-            -37.921484
-          ],
-          [
-            145.120387,
-            -37.921742
-          ],
-          [
-            145.120204,
-            -37.92262
-          ],
-          [
-            145.119973,
-            -37.923854
-          ],
-          [
-            145.121433,
-            -37.924959
-          ],
-          [
-            145.122107,
-            -37.925457
-          ],
-          [
-            145.123887,
-            -37.926817
-          ]
-        ]
-      }"""
+def stations_near_route(line: NearRouteRequest):
 
     line_shape = line.to_shape()
 
@@ -182,7 +95,7 @@ def stations_near_route(line: NearRouteStationsRequest):
             .order_by("distance")
             .all()
         )
-        
+
 
         results = [
             {"id": s.id, "name": s.name, "distance_m": s.distance}
@@ -261,62 +174,8 @@ def stations_near_loc(req: NearLocRequest):
 
 # class ParkingNearLocReq()
 
-@app.post('/parking/near_location')
+@app.post("/parking/near_location")
 def parking_near_loc(req: NearLocRequest):
-
-    # return 400 if coordinates are missing
-    if not req.coordinates or req.coordinates.lat is None or req.coordinates.long is None:
-        raise HTTPException(status_code=400, detail="Missing coordinates")
-
-    point_shape = shape({
-        "type": "Point",
-        "coordinates": [req.coordinates.long, req.coordinates.lat]
-    })
-    point_geom = from_shape(point_shape, srid=7844)
-
-    session = SessionLocal()
-    try:
-        zones = (
-            session.query(
-                OsmPublicParking.id,
-                OsmPublicParking.name,
-                OsmPublicParking.geom,
-                func.ST_Distance(
-                    cast( OsmPublicParking.geom, Geography(srid=7844) ),
-                    cast( point_geom, Geography(srid=7844) )
-                ).label("distance")
-            )
-            .filter(
-                func.ST_DWithin(
-                    cast(OsmPublicParking.geom, Geography(srid=7844)),
-                    cast(point_geom, Geography(srid=7844)),
-                    req.maxdistance
-                )
-            )
-            .order_by("distance")
-            .all()
-        )
-
-        results = []
-        for z in zones:
-            shapely_geom = to_shape(z.geom)
-            results.append({
-                "id": z.id,
-                "name": z.name,
-                "location": {
-                    "lat": shapely_geom.y,
-                    "long": shapely_geom.x
-                },
-                "distance_m": z.dist
-            })
-
-        return {"parking_zones": results}
-    
-    finally:
-        session.close()
-
-@app.post("/parking/nearby")
-def parking_nearby(req: NearLocRequest):
 
     if not req.coordinates or req.coordinates.lat is None or req.coordinates.long is None:
         raise HTTPException(status_code=400, detail="Missing coordinates")
@@ -367,8 +226,8 @@ def parking_nearby(req: NearLocRequest):
                 "id": r.id,
                 "name": r.name,
                 "other_tags": parse_hstore(r.other_tags),
-                "multipolygon": r.geom_wkt,
-                "centroid": {
+                "parking_area_multipolygon": r.geom_wkt,
+                "parking_area_centroid": {
                     "lat": r.cen_lat,
                     "long": r.cen_long
                 },
@@ -378,6 +237,71 @@ def parking_nearby(req: NearLocRequest):
         ]
     finally:
         session.close()
+
+@app.post("/park_ride")
+def park_n_ride(req: NearRouteRequest):
+
+    line_shape = req.to_shape()
+    line_geom = from_shape(line_shape, srid=7844)
+
+    session = SessionLocal()
+    try:
+
+        centroid = func.ST_Transform(func.ST_Centroid(OsmParkNRide.geom), 7844)
+
+        park_and_rides = (
+            session.query(
+                OsmParkNRide.id,
+                OsmParkNRide.zone_name,
+                OsmParkNRide.nearest_ts_id,
+                TrainStation.name.label('nearest_ts_name'),
+                OsmParkNRide.other_tags,
+                func.ST_AsText(OsmParkNRide.geom).label('geom_wkt'),
+                func.ST_X(centroid).label('cen_long'),
+                func.ST_Y(centroid).label('cen_lat'),
+                func.ST_Distance(
+                    cast(OsmParkNRide.geom, Geography(srid=7844)),
+                    cast(line_geom, Geography(srid=7844))
+                ).label("distance")
+            )
+            .join(
+                TrainStation,
+                OsmParkNRide.nearest_ts_id == TrainStation.id,
+                isouter=False
+            )
+            .filter(
+                func.ST_DWithin(
+                    cast(OsmParkNRide.geom, Geography(srid=7844)),
+                    cast(line_geom, Geography(srid=7844)),
+                    req.maxdistance
+                )
+            )
+            .order_by("distance")
+            .all()
+        )
+
+        results = [
+            {
+                "id": p.id,
+                "zone_name": p.zone_name,
+                "nearest_train_station_name": p.nearest_ts_name,
+                "other_tags": parse_hstore(p.other_tags),
+                "nearest_station_multipolygon": p.geom_wkt,
+                "nearest_station_centroid": {
+                    "lat": p.cen_lat,
+                    "long": p.cen_long
+                },
+                "distance_meters": p.distance
+            }
+            for p in park_and_rides
+        ]
+
+        return {"park_and_ride": results}
+    
+    finally:
+        session.close()
+
+    
 
 def parse_hstore(hstore_str: str):
     """
