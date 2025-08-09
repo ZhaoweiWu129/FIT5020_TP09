@@ -1,16 +1,3 @@
-# # check=skip=JSONArgsRecommended
-# FROM eclipse-temurin:21-jdk
-
-# # Set working directory
-# WORKDIR /graphhopper
-
-# # Copy GraphHopper jar and PBF file
-# COPY graphhopper-web-10.2.jar /graphhopper/
-# COPY melb.osm.pbf /graphhopper/
-
-# # Import first, then start in web mode
-# CMD java $JAVA_OPTS -jar graphhopper-web-10.2.jar web melb.osm.pbf
-
 FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /data
