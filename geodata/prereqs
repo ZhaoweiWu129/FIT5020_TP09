@@ -1,0 +1,38 @@
+apt update && apt install unzip
+
+unzip ./adata/MB_2021_AUST_SHP_GDA2020/MB_2021_AUST_GDA2020.shp -d ./adata/MB_2021_AUST_SHP_GDA2020/
+
+example ogr2ogr use:
+ogr2ogr PG:"dbname=melb user=postgres" "/data/MB_2021_AUST_GDA2020.shp" -nln ex -overwrite -nlt MULTIPOLYGON
+
+postgis:
+
+docker pull postgis/postgis
+docker run --name some-postgis -e POSTGRES_PASSWORD=mysecretpassword -d postgis/postgis
+# docker exec -it some-postgis psql -U postgres -d gisdb
+
+docker run -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres -p 5432:5432 -d  postgis/postgis
+
+inside docker container:
+
+apt update &&
+apt install gdal-bin
+
+should create db (melb), user, pass, etc, then run create extension postgis; inside psql
+
+ogr2ogr PG:"dbname=melb user=postgres" "/data/MB_2021_AUST_GDA2020.shp" -nln ex -overwrite -nlt MULTIPOLYGON
+
+ogr2ogr PG:"dbname=melb user=postgres" "/data/Parking_Restrictions/Parking_Restrictions.shp" -nln parking_restrictions -overwrite -nlt LINESTRING -progress
+
+ogr2ogr PG:"dbname=melb user=postgres" "/data/" -nln parking_restrictions -overwrite -nlt LINESTRING -progress
+
+ogr2ogr -f "PostgreSQL" PG:"dbname=melb user=postgres" melb.osm.pbf -nln osm_data -t_srs EPSG:7844
+
+we have 2 pnr tables - one from gtfs and one from osm
+
+-------------------
+
+docker file for db:
+
+pull postgis/postgis
+then run psql -U postgres -f combined.sql

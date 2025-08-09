@@ -1,0 +1,24 @@
+
+services:
+  db:
+    build: ./geodata
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: melb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:pass@db:5432/melb
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
