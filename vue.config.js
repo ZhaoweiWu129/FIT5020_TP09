@@ -1,4 +1,15 @@
-const { defineConfig } = require('@vue/cli-service')
+const { defineConfig } = require('@vue/cli-service');
+
 module.exports = defineConfig({
-  transpileDependencies: true
-})
+  transpileDependencies: true,
+  devServer: {
+    port: 8080, // Vue dev server
+    proxy: {
+      // forward API calls to the backend
+      '^/(parking|stations|park_ride)': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
+});

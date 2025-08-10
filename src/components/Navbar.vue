@@ -14,7 +14,7 @@ export default {
 
 <style scoped>
 .navbar {
-  background-color: #ffffff;
+  background-color: rgba(243, 243, 243, 0.49);
   padding: 20px;
   border-bottom: 1px solid #eee;
 }

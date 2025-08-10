@@ -1,143 +1,381 @@
-<template>
-  <section class="route-map">
-    <h2>Find a Route</h2>
-
-    <form @submit.prevent="getRoute">
-      <div class="input-group">
-        <label>Start (lat,lng)</label>
-        <input v-model="startAddress" placeholder="Start address (e.g. 300 Flinders St, Melbourne)" />
-      </div>
-      <div class="input-group">
-        <label>Destination (lat,lng)</label>
-        <input v-model="endAddress" placeholder="Destination address (e.g. 50 Lonsdale St, Melbourne)" />
-      </div>
-      <button type="submit">Get Route</button>
-    </form>
-
-    <div v-if="result" class="result">
-      <p><strong>Distance:</strong> {{ (result.distance / 1000).toFixed(2) }} km</p>
-      <p><strong>Time:</strong> {{ Math.round(result.time / 60000) }} min</p>
-    </div>
-
-    <div id="map" ref="map" class="map"></div>
-  </section>
-</template>
-
-<script>
+<script setup>
+import { onMounted, nextTick, ref } from 'vue';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-export default {
-  name: "RouteMap",
-  data() {
-    return {
-      startAddress: "Flinders Street, Melbourne",
-      endAddress: "Russell Street, Melbourne",
-      result: null,
-      map: null,
-      routeLayer: null
-    };
-  },
-  mounted() {
-    this.initMap();
-  },
-  methods: {
-    initMap() {
-      this.map = L.map(this.$refs.map).setView([-37.8136, 144.9631], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(this.map);
-    },
-    async getRoute() {
-      const key = "d1ab6ff6-8d5b-4ae6-99a6-d80e046f9826";
 
-      try {
-        const [startLat, startLng] = await this.geocode(this.startAddress);
+//Icon URLs and markers
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import trainPng from '@/assets/train.png';
+import parkPng from '@/assets/parking-meter-export.png';
+import ParkRide from '@/assets/parkandride.png';
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+const stationIcon = L.icon({
+  iconUrl: trainPng
+});
+const ParkIcon = L.icon({
+  iconUrl: parkPng
+});
+const ParkRideIcon = L.icon({
+  iconUrl: ParkRide
+});
 
-        const [endLat, endLng] = await this.geocode(this.endAddress);
 
-        const url = `https://graphhopper.com/api/1/route?point=${startLat},${startLng}&point=${endLat},${endLng}&vehicle=car&locale=en&calc_points=true&points_encoded=false&key=${key}`;
+const start = ref('Boxhill, Melbourne');
+const end   = ref('Flinders Street, Melbourne');
+const summary = ref(null);
+const mapEl = ref(null);
+let map, routeLayer, markers = [];
+let stationLayer;
+let parkRideLayer;
+let destParkingLayer;
 
-        const res = await fetch(url);
-        const data = await res.json();
 
-        if (data.paths && data.paths.length > 0) {
-          const path = data.paths[0];
-          this.result = {
-            distance: path.distance,
-            time: path.time
-          };
+onMounted(async () => {
+  await nextTick();
+  map = L.map(mapEl.value).setView([-37.8136, 144.9631], 14);
+  //Layers
+  parkRideLayer = L.layerGroup().addTo(map);
+  stationLayer = L.layerGroup().addTo(map);
+  destParkingLayer = L.layerGroup().addTo(map);
 
-          const coords = path.points.coordinates.map(coord => [coord[1], coord[0]]);
-          if (this.routeLayer) this.routeLayer.remove();
-          this.routeLayer = L.polyline(coords, { color: 'blue' }).addTo(this.map);
-          this.map.fitBounds(this.routeLayer.getBounds());
-        } else {
-          alert("No route found.");
-        }
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  setTimeout(() => map.invalidateSize(), 0);
+  window.addEventListener('resize', () => map.invalidateSize());
+});
 
-      } catch (err) {
-        console.error(err);
-        alert("Failed to get route.");
-      }
-    },
-    async geocode(address) {
-      const key = "d1ab6ff6-8d5b-4ae6-99a6-d80e046f9826"; // same as routing key
-      const url = `https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(address)}&limit=1&key=${key}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.hits && data.hits.length > 0) {
-        return [data.hits[0].point.lat, data.hits[0].point.lng]; // [lat, lng]
-      } else {
-        throw new Error("Address not found: " + address);
-      }
-    }
+async function geocode(address) {
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&addressdetails=0`;
+  const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+  if (!res.ok) throw new Error(`Geocode failed: ${res.status}`);
+  const data = await res.json();
+  if (!data.length) throw new Error(`No match for: ${address}`);
+  const { lat, lon } = data[0];
+  // NOTE: OSRM expects lon,lat order
+  return [parseFloat(lon), parseFloat(lat)];
+}
+
+function sampleRoutePoints(lngLatCoords, maxSamples = 20, stride = 12) {
+  const picked = [];
+  for (let i = 0; i < lngLatCoords.length; i += stride) {
+    picked.push(lngLatCoords[i]);
+    if (picked.length >= maxSamples) break;
   }
-};
+  if (lngLatCoords.length && picked[picked.length - 1] !== lngLatCoords[lngLatCoords.length - 1]) {
+    picked.push(lngLatCoords[lngLatCoords.length - 1]);
+  }
+  return picked;
+}
+
+//Fetch Station along route
+async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) {
+  if (!lngLatCoords?.length) return;
+  if (!stationLayer) stationLayer = L.layerGroup().addTo(map);
+
+  const samples = sampleRoutePoints(lngLatCoords, 20, 12);
+  const byId = new Map();
+  const batchSize = 5;
+
+  for (let i = 0; i < samples.length; i += batchSize) {
+    const batch = samples.slice(i, i + batchSize);
+    const calls = batch.map(([lng, lat]) =>
+        //Fetch from backend py file near start location function
+        fetch(`/stations/near_location`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            maxdistance,
+            coordinates: { lat, long: lng }
+          })
+        })
+            .then(r => r.ok ? r.json() : { stations: [] })
+            .catch(() => ({ stations: [] }))
+    );
+
+    const results = await Promise.all(calls);
+    results.forEach(({ stations }) => {
+      stations.forEach(s => {
+        const prev = byId.get(s.id);
+        if (!prev || s.distance_m < prev.distance_m) byId.set(s.id, s);
+      });
+    });
+  }
+
+  stationLayer.clearLayers();
+  Array.from(byId.values()).forEach(s => {
+    //Marker for station
+    L.marker([s.location.lat, s.location.long],{icon:stationIcon})
+        .bindPopup(`${s.name}<br>${Math.round(s.distance_m)} m from route`)
+        .addTo(stationLayer);
+  });
+}
+async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
+  if (!rawLngLatCoords?.length) return;
+  if (!parkRideLayer) parkRideLayer = L.layerGroup().addTo(map);
+
+  //Fetch from backend py file park and ride function
+  const res = await fetch(`/park_ride`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      maxdistance,
+      coordinates: rawLngLatCoords // IMPORTANT: [lng,lat] as returned by OSRM
+    })
+  });
+  if (!res.ok) { console.warn('park_ride failed'); return; }
+  const data = await res.json(); // { park_and_ride: [...] }
+
+  parkRideLayer.clearLayers();
+  (data.park_and_ride || []).forEach(p => {
+    // backend returns centroid as "nearest_station_centroid" (it is the polygon centroid)
+    const { lat, long } = p.nearest_station_centroid;
+    //marker for parkRide
+    L.marker([lat, long],{icon:ParkRideIcon})
+        //Park and ride marker
+        .bindPopup(
+            `<b>${p.zone_name ?? 'Park & Ride'}</b><br>
+         Nearest station: ${p.nearest_train_station_name}<br>
+         ~${Math.round(p.distance_meters)} m from route`
+        )
+        .addTo(parkRideLayer);
+  });
+}
+async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
+  if (!destParkingLayer) destParkingLayer = L.layerGroup().addTo(map);
+
+  const res = await fetch(`/parking/near_location`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      maxdistance,
+      coordinates: { lat, long: lng }
+    })
+  });
+  if (!res.ok) { console.warn('parking near dest failed'); return; }
+  const data = await res.json(); // array of parkings
+
+  destParkingLayer.clearLayers();
+  data.forEach(p => {
+    const { lat: cenLat, long: cenLng } = p.parking_area_centroid;
+    L.marker([cenLat, cenLng],{icon:ParkIcon})
+        .bindPopup(`${p.name ?? 'Parking'} – ${Math.round(p.distance_meters)} m`)
+        .addTo(destParkingLayer);
+  });
+}
+
+
+async function getRoute() {
+  try {
+    clearRoute();
+    const [fromLonLat, toLonLat] = await Promise.all([
+      geocode(start.value),
+      geocode(end.value),
+    ]);
+
+    const osrmUrl =
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${fromLonLat[0]},${fromLonLat[1]};${toLonLat[0]},${toLonLat[1]}` +
+        `?overview=full&geometries=geojson&steps=false&annotations=false`;
+
+    const res = await fetch(osrmUrl);
+    if (!res.ok) throw new Error(`OSRM failed: ${res.status}`);
+    const json = await res.json();
+    if (json.code !== 'Ok' || !json.routes?.length) throw new Error('No route returned');
+
+    const route = json.routes[0];
+    const coords = route.geometry.coordinates.map(([lon, lat]) => [lat, lon]); // Leaflet wants lat,lng
+    routeLayer = L.polyline(coords, { weight: 5, opacity: 0.9 }).addTo(map);
+
+    //Fetch nearest station
+    const routeData = json.routes[0];
+
+    // For backend fetch (lng,lat as OSRM gives them)
+    const rawCoords = routeData.geometry.coordinates;
+    //Distance fetch within range
+    await fetchStationsAlongRouteFrontend(rawCoords, 600);
+    await fetchParkRideAlongRoute(rawCoords, 800);
+    await fetchParkingNearPoint(toLonLat[1], toLonLat[0], 600);
+
+    // Markers
+    markers.push(L.marker([fromLonLat[1], fromLonLat[0]]).addTo(map));
+    markers.push(L.marker([toLonLat[1], toLonLat[0]]).addTo(map));
+
+    map.fitBounds(routeLayer.getBounds(), { padding: [24, 24] });
+    // Call backend: find parking near the start point of the route first function from
+    try {
+      const startLatLng = coords[0]; // coords is [[lat, lng], ...]
+      const res = await fetch('/parking/near_location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          maxdistance: 700, // meters
+          coordinates: { lat: startLatLng[0], long: startLatLng[1] }
+        }),
+      });
+      const parkingData = await res.json();
+
+      parkingData.forEach(p => {
+        const { lat, long } = p.parking_area_centroid;
+        L.marker([lat, long])
+            .addTo(map)
+            .bindPopup(`${p.name || 'Parking'} • ${Math.round(p.distance_meters)} m`);
+      });
+    } catch (err) {
+      console.error('Error fetching parking:', err);
+    }
+
+    //show summary
+    summary.value = {
+      distance: `${Math.round(route.distance / 1000)} km`,
+      duration: `${Math.round(route.duration / 60)} min`,
+    };
+
+
+  } catch (e) {
+    console.error(e);
+    alert(e.message);
+  }
+}
+
+function clearRoute() {
+  if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  summary.value = null;
+}
 
 </script>
 
+<template>
+  <section class="route">
+    <h1 class="route__title">Find a Route</h1>
+    <div class="route__grid">
+      <form class="card route__form" @submit.prevent="getRoute">
+        <label class="field">
+          <span class="field__label">Start</span>
+          <input class="field__input" v-model="start" placeholder="Flinders Street, Melbourne" />
+        </label>
+        <label class="field">
+          <span class="field__label">Destination</span>
+          <input class="field__input" v-model="end" placeholder="Russell Street, Melbourne" />
+        </label>
+        <div class="actions">
+          <button class="btn btn--primary" type="submit">Get Route</button>
+        </div>
+        <div class="summary" v-if="summary">
+          <div class="summary__pill">Time: {{ summary.duration }}  Distance: {{ summary.distance }}</div>
+        </div>
+
+      </form>
+
+      <div class="card route__map">
+        <div id="map" ref="mapEl"></div>
+      </div>
+    </div>
+  </section>
+</template>
+
 <style scoped>
-.route-map {
-  padding: 40px 20px;
-  max-width: 800px;
-  margin: auto;
-  background: #f8f9fa;
-  border-radius: 8px;
+:root { --bg: #f7f7fb; --card: #ffffff; --ink: #1f2937; --muted:#6b7280; --brand: #02a2ff; --brand-700:#2563eb; }
+
+.route {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 16px;
+}
+.route__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 16px;
+  letter-spacing: .2px;
+}
+.route__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 960px) {
+  .route__grid { grid-template-columns: 380px 1fr; }
 }
 
-.input-group {
-  margin-bottom: 15px;
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  border: 1px solid rgba(17,24,39,.06);
+}
+.route__form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  /* center vertically */
+  align-items: stretch;     /* make inputs/button full width */
+  height: 100%;
+  padding: 24px;            /* consistent inner padding */
+  box-sizing: border-box;
+  gap: 12px;                 /* equal spacing between fields/buttons */
+}
+.route__map { padding: 12px; }
+
+.field { display: grid; gap: 6px; margin-bottom: 12px; }
+.field__label { font-size: 13px; color: var(--muted); }
+.field__input {
+  height: 42px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid rgba(17,24,39,.12); outline: none; font-size: 14px;
+}
+.field__input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.15);
 }
 
-label {
-  font-weight: bold;
+.actions {
+  margin-top: 0;        /* space above button */
 }
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.btn {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 0;
   cursor: pointer;
+  font-weight: 600;
+  color: #616975;
+}
+.btn--primary {
+  background: linear-gradient(180deg, #3b82f6, #0048e8);
+  color: #fff;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn--primary:hover { filter: brightness(.98); transform: translateY(-1px); }
+
+.summary { margin-top: 10px; }
+.summary__pill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
 }
 
-.result {
-  margin-top: 20px;
+
+#map {
+  width: 100%;
+  height: 520px;              /* taller, feels premium */
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.map {
-  height: 400px;
-  margin-top: 30px;
-  border-radius: 8px;
-}
 </style>

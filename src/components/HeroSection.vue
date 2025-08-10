@@ -1,111 +1,151 @@
 <template>
   <section class="hero">
-    <div class="hero-container">
-      <div class="hero-text">
-        <p class="small-title">Neque porro quisquam est qui dolorem ipsum quia</p>
-        <h1 class="main-title">MELBOURNE PARKING</h1>
-        <p class="description">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          Ut enim ad minim veniam, quis nostrud exercitation.
-        </p>
-        <div class="buttons">
-          <button class="btn-primary">Find out more</button>
-          <button class="btn-secondary">See all cars ownership</button>
+    <div class="hero__band">
+      <div class="hero__grid">
+        <div class="hero__left">
+          <h1 class="hero__title">Park & <span class="thin"> Ride</span></h1>
+          <p class="hero__lead">
+            Drive to a nearby station, then ride into the CBD by train, tram, or bus.
+          </p>
+          <div class="hero__actions">
+            <button class="btn btn-primary">Try Now</button>
+            <button class="btn btn-ghost">See all car ownership</button>
+          </div>
         </div>
-      </div>
+        <div class="hero__right">
+          <img src="@/assets/Hero.jpg" alt="front" class = "front" />
+        </div>
 
-      <div class="hero-image">
-        <div class="image-placeholder"></div>
       </div>
     </div>
   </section>
 </template>
 
-<script>
-export default {
-  name: 'HeroSection'
-}
-</script>
-
 <style scoped>
-.hero {
-  background-color: #dce3ed;
-  padding: 80px 20px;
+:root{
+  --ink:#121418;
+  --muted:#616975;
 }
 
-.hero-container {
+.hero {
+  background-size: cover;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,.12);
+}
+
+.hero__grid, .hero__wrap, .hero__inner {
   max-width: 1200px;
   margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
+  padding: clamp(56px, 7vw, 110px) 28px;
+  display: grid;
+  grid-template-columns: 7fr 5fr;  /* stronger emphasis on text */
   align-items: center;
-  justify-content: space-between;
+  gap: clamp(28px, 4vw, 64px);
 }
 
-.hero-text {
-  flex: 1;
-  min-width: 300px;
-  padding-right: 40px;
+/* Left column: stronger headline & tighter measure */
+.hero__left{
+  max-width: 560px;
+}
+.hero__title{
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  font-size: clamp(52px, 7.5vw, 92px);
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+.hero__lead{
+  color: var(--muted);
+  font-size: clamp(16px, 1.9vw, 20px);
+  line-height: 1.7;
+  margin: 0 0 26px;
+}
+.hero__actions{ display:flex; gap:12px; flex-wrap:wrap; }
+.btn{ padding: 14px 18px; border-radius: 10px; font-weight: 700; }
+
+/* Right column */
+.hero__right{
+  position: relative;
+  justify-self: end;
+  width: min(520px, 38vw);
+  height: min(640px, 48vw);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,.12);
+  background: #f6f7f9;
+
+  perspective: 1200px;
+  transition: transform 1.2s ease;
+  transform-style: preserve-3d;
 }
 
-.small-title {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
+/* spin on hover (optional) */
+.hero__right:hover{
+  transform: rotateY(360deg);
 }
 
-.main-title {
-  font-size: 36px;
-  font-weight: bold;
-  color: #1e1e1e;
-  margin-bottom: 20px;
-}
-
-.description {
-  font-size: 16px;
-  color: #444;
-  margin-bottom: 30px;
-}
-
-.buttons {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.btn-primary {
-  background-color: white;
-  color: black;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-.btn-secondary {
-  background-color: transparent;
-  color: black;
-  padding: 10px 20px;
-  border: 2px solid black;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-.hero-image {
-  flex: 1;
-  min-width: 300px;
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.image-placeholder {
+/* FRONT image */
+.hero__right img{
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-width: 400px;
-  height: 280px;
-  background-color: #a1aaba;
-  border-radius: 30px;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+
+  backface-visibility: hidden;
+  transition: opacity .6s ease;  /* allow crossfade */
+  z-index: 2;                    /* above ::after by default */
+}
+/* Fade overlay */
+.hero__right::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to left, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 30%);
+  z-index: 1;
+  pointer-events: none; /* let clicks go through */
+}
+/* BACK image*/
+.hero__right::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/hero3.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity .6s ease .15s;
+  z-index: 1;                    /* below <img> at start */
+}
+
+/* CROSSFADE on hover */
+.hero__right:hover img{ opacity: 0; }     /* fade front out */
+.hero__right:hover::after{ opacity: 1; }  /* fade back in */
+
+
+
+.topbar, header.navbar, .site-header{
+  background:#f3f4f6;
+}
+
+/* Tighten page edges (browsers add default margin) */
+:global(html, body){ margin:0; }
+
+/* Responsive stack */
+@media (max-width: 980px){
+  .hero__grid, .hero__wrap, .hero__inner{
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 44px 20px;
+  }
+  .hero__right{
+    width: 100%;
+    height: 300px;
+    justify-self: stretch;
+  }
 }
 </style>
+
