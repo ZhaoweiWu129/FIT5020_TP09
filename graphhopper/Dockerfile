@@ -7,6 +7,7 @@ COPY graphhopper-web-10.2.jar /data/
 COPY config.yml /data/
 COPY entrypoint.sh /data/
 COPY melb.osm.pbf /data/
+COPY gtfs.zip /data/
 
 # Make entrypoint executable
 RUN chmod +x /data/entrypoint.sh

@@ -2,7 +2,8 @@
 node_modules
 /dist
 .venv/
-graphhopper/graph-cache
+graphhopper/graph-cache*
+graphhopper/gtfs_all.zip
 
 # local env files
 .env.local
