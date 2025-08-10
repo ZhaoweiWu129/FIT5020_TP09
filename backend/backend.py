@@ -255,6 +255,8 @@ def park_n_ride(req: NearRouteRequest):
                 OsmParkNRide.zone_name,
                 OsmParkNRide.nearest_ts_id,
                 TrainStation.name.label('nearest_ts_name'),
+                func.ST_X(TrainStation.geom).label('nearest_ts_long'),
+                func.ST_Y(TrainStation.geom).label('nearest_ts_lat'),
                 OsmParkNRide.other_tags,
                 func.ST_AsText(OsmParkNRide.geom).label('geom_wkt'),
                 func.ST_X(centroid).label('cen_long'),
@@ -285,13 +287,17 @@ def park_n_ride(req: NearRouteRequest):
                 "id": p.id,
                 "zone_name": p.zone_name,
                 "nearest_train_station_name": p.nearest_ts_name,
+                "nearest_train_station_coords": {
+                    "lat": p.nearest_ts_lat,
+                    "long": p.nearest_ts_long
+                },
                 "other_tags": parse_hstore(p.other_tags),
-                "nearest_station_multipolygon": p.geom_wkt,
-                "nearest_station_centroid": {
+                "parking_area_multipolygon": p.geom_wkt,
+                "parking_area_centroid": {
                     "lat": p.cen_lat,
                     "long": p.cen_long
                 },
-                "distance_meters": p.distance
+                "parking_to_station_meters": p.distance
             }
             for p in park_and_rides
         ]
