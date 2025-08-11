@@ -2,7 +2,8 @@
 import { onMounted, nextTick, ref } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
+//api for https
+const API_BASE = process.env.VUE_APP_API_BASE || '';
 
 //Icon URLs and markers
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -122,7 +123,7 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
   if (!parkRideLayer) parkRideLayer = L.layerGroup().addTo(map);
 
   //Fetch from backend py file park and ride function
-  const res = await fetch(`/park_ride`, {
+  const res = await fetch(`${API_BASE}/park_ride`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -151,7 +152,7 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
 async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
   if (!destParkingLayer) destParkingLayer = L.layerGroup().addTo(map);
 
-  const res = await fetch(`/parking/near_location`, {
+  const res = await fetch(`${API_BASE}/parking/near_location`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -212,7 +213,7 @@ async function getRoute() {
     // Call backend: find parking near the start point of the route first function from
     try {
       const startLatLng = coords[0]; // coords is [[lat, lng], ...]
-      const res = await fetch('/parking/near_location', {
+      const res = await fetch('${API_BASE}/parking/near_location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
