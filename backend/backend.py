@@ -264,7 +264,11 @@ def park_n_ride(req: NearRouteRequest):
                 func.ST_Distance(
                     cast(OsmParkNRide.geom, Geography(srid=7844)),
                     cast(line_geom, Geography(srid=7844))
-                ).label("distance")
+                ).label("distance"),
+                func.ST_Distance(
+                    cast(OsmParkNRide.geom, Geography(srid=7844)),
+                    cast(TrainStation.geom, Geography(srid=7844))
+                ).label("ts_pr_distance")
             )
             .join(
                 TrainStation,
@@ -297,7 +301,8 @@ def park_n_ride(req: NearRouteRequest):
                     "lat": p.cen_lat,
                     "long": p.cen_long
                 },
-                "parking_to_station_meters": p.distance
+                "distance_m": p.distance,
+                "ts_pr_distance_m": p.ts_pr_distance
             }
             for p in park_and_rides
         ]

@@ -123,6 +123,7 @@ async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) 
 async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
   if (!rawLngLatCoords?.length) return;
   if (!parkRideLayer) parkRideLayer = L.layerGroup().addTo(map);
+  if (!stationLayer) stationLayer = L.layerGroup().addTo(map);
 
   //Fetch from backend py file park and ride function
   const res = await fetch(`/park_ride`, {
@@ -146,9 +147,13 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
         .bindPopup(
             `<b>${p.zone_name ?? 'Park & Ride'}</b><br>
          Nearest station: ${p.nearest_train_station_name}<br>
-         ~${Math.round(p.parking_to_station_meters)} m from route`
+         ~${Math.round(p.distance_m)} m from route`
         )
         .addTo(parkRideLayer);
+    // Add station marker if it exists
+    L.marker([p.nearest_train_station_coords.lat, p.nearest_train_station_coords.long],{icon:stationIcon})
+        .bindPopup(`Station: ${p.nearest_train_station_name}<br>${Math.round(p.ts_pr_distance_m)} m from park & ride`)
+        .addTo(stationLayer);
   });
 }
 async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
