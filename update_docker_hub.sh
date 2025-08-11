@@ -8,6 +8,5 @@ docker push 7wikmonash/onb_be:latest
 docker push 7wikmonash/onb_db:latest
 
 ## on cloud VM:
-# sudo docker pull 7wikmonash/onb_db
-# sudo docker pull 7wikmonash/onb_be
-# sudo docker pull 7wikmonash/onb_fe
+# docker pull compose pull
+# docker compose up -d

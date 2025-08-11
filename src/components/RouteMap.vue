@@ -276,20 +276,23 @@ function clearRoute() {
           <span class="field__label">Destination</span>
           <input class="field__input" v-model="end" placeholder="Russell Street, Melbourne" />
         </label>
-        <div class="actions">
-          <button class="btn btn--primary" type="submit">Get Route</button>
-        </div>
         <div class="summary" v-if="summary">
           <div class="summary__pill">Time: {{ summary.duration }}  Distance: {{ summary.distance }}</div>
         </div>
-          <label>Stations Distance: {{ maxDistanceStations }}m</label>
-          <input type="range" min="100" max="2000" step="50" v-model="maxDistanceStations" />
+        <hr />
+        <label>Display Filters</label>
+        <label>Max. distance of stations from your route: {{ maxDistanceStations }}m</label>
+        <input type="range" min="100" max="2000" step="50" v-model="maxDistanceStations" />
 
-          <label>Park & Ride Distance: {{ maxDistanceParkRide }}m</label>
-          <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParkRide" />
+        <label>Max. distance of Park & Ride zones from your route: {{ maxDistanceParkRide }}m</label>
+        <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParkRide" />
 
-          <label>Parking Distance: {{ maxDistanceParking }}m</label>
-          <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParking" />
+        <label>Max. Distance of public parking spaces from your destination: {{ maxDistanceParking }}m</label>
+        <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParking" />
+
+        <div class="actions">
+          <button class="btn btn--primary" type="submit">Get Route</button>
+        </div>
       </form>
 
       <div class="card route__map">
