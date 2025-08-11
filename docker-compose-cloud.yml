@@ -1,0 +1,40 @@
+
+services:
+  db:
+    image: 7wikmonash/onb_db:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: melb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    image: 7wikmonash/onb_be:latest
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:pass@db:5432/melb
+    ports:
+      - "8000:8000"
+  
+  frontend:
+    image: 7wikmonash/onb_fe:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  # graphhopper:
+  #   build: ./graphhopper
+  #   ports:
+  #     - "8989:8989"
+  #   environment:
+  #     - JAVA_OPTS=-Xmx4g
+  #   volumes:
+  #     - ./graphhopper/graph-cache:/data/graph-cache
+
+volumes:
+  pgdata:
