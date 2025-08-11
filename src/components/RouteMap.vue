@@ -32,6 +32,7 @@ const start = ref('Boxhill, Melbourne');
 const end   = ref('Flinders Street, Melbourne');
 const summary = ref(null);
 const mapEl = ref(null);
+const maxDistance = ref(600); // meters
 let map, routeLayer, markers = [];
 let stationLayer;
 let parkRideLayer;
@@ -59,9 +60,9 @@ async function geocode(address) {
   if (!res.ok) throw new Error(`Geocode failed: ${res.status}`);
   const data = await res.json();
   if (!data.length) throw new Error(`No match for: ${address}`);
-  const { lat, lon } = data[0];
+  const { lat, lon, name } = data[0];
   // NOTE: OSRM expects lon,lat order
-  return [parseFloat(lon), parseFloat(lat)];
+  return [parseFloat(lon), parseFloat(lat), name];
 }
 
 function sampleRoutePoints(lngLatCoords, maxSamples = 20, stride = 12) {
@@ -77,7 +78,7 @@ function sampleRoutePoints(lngLatCoords, maxSamples = 20, stride = 12) {
 }
 
 //Fetch Station along route
-async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) {
+async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = maxDistance.value) {
   if (!lngLatCoords?.length) return;
   if (!stationLayer) stationLayer = L.layerGroup().addTo(map);
 
@@ -118,7 +119,7 @@ async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) 
         .addTo(stationLayer);
   });
 }
-async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
+async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = maxDistance.value) {
   if (!rawLngLatCoords?.length) return;
   if (!parkRideLayer) parkRideLayer = L.layerGroup().addTo(map);
 
@@ -149,7 +150,7 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
         .addTo(parkRideLayer);
   });
 }
-async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
+async function fetchParkingNearPoint(lat, lng, maxdistance = maxDistance.value) {
   if (!destParkingLayer) destParkingLayer = L.layerGroup().addTo(map);
 
   const res = await fetch(`/parking/near_location`, {
@@ -167,7 +168,7 @@ async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
   data.forEach(p => {
     const { lat: cenLat, long: cenLng } = p.parking_area_centroid;
     L.marker([cenLat, cenLng],{icon:ParkIcon})
-        .bindPopup(`${p.name ?? 'Parking'} – ${Math.round(p.parking_to_station_meters)} m`)
+        .bindPopup(`${p.name ?? 'Parking'} - ${Math.round(p.distance_meters)} m from destination`)
         .addTo(destParkingLayer);
   });
 }
@@ -206,32 +207,32 @@ async function getRoute() {
     await fetchParkingNearPoint(toLonLat[1], toLonLat[0], 600);
 
     // Markers
-    markers.push(L.marker([fromLonLat[1], fromLonLat[0]]).addTo(map));
-    markers.push(L.marker([toLonLat[1], toLonLat[0]]).addTo(map));
+    markers.push(L.marker([fromLonLat[1], fromLonLat[0]]).bindPopup(`Starting Location: ${fromLonLat[2]}`).addTo(map));
+    markers.push(L.marker([toLonLat[1], toLonLat[0]]).bindPopup(`Destination: ${toLonLat[2]}`).addTo(map));
 
     map.fitBounds(routeLayer.getBounds(), { padding: [24, 24] });
     // Call backend: find parking near the start point of the route first function from
-    try {
-      const startLatLng = coords[0]; // coords is [[lat, lng], ...]
-      const res = await fetch('/parking/near_location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          maxdistance: 700, // meters
-          coordinates: { lat: startLatLng[0], long: startLatLng[1] }
-        }),
-      });
-      const parkingData = await res.json();
+    // try {
+    //   const startLatLng = coords[0]; // coords is [[lat, lng], ...]
+    //   const res = await fetch('/parking/near_location', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({
+    //       maxdistance: maxDistance.value, // meters
+    //       coordinates: { lat: startLatLng[0], long: startLatLng[1] }
+    //     }),
+    //   });
+    //   const parkingData = await res.json();
 
-      parkingData.forEach(p => {
-        const { lat, long } = p.parking_area_centroid;
-        L.marker([lat, long])
-            .addTo(map)
-            .bindPopup(`${p.name || 'Parking'} • ${Math.round(p.parking_to_station_meters)} m`);
-      });
-    } catch (err) {
-      console.error('Error fetching parking:', err);
-    }
+    //   parkingData.forEach(p => {
+    //     const { lat, long } = p.parking_area_centroid;
+    //     L.marker([lat, long])
+    //         .addTo(map)
+    //         .bindPopup(`${p.name || 'Parking'} - ${Math.round(p.parking_to_station_meters)} m`);
+    //   });
+    // } catch (err) {
+    //   console.error('Error fetching parking:', err);
+    // }
 
     //show summary
     summary.value = {
