@@ -1,28 +1,42 @@
+<!-- Navbar.vue -->
 <template>
   <nav class="navbar">
-    <div class="navbar-content">
-      <h1 class="logo">AgilePark</h1>
-    </div>
+    <router-link to="/" class="brand">
+      <img src="@/assets/Logo1.png" alt="AgilePark logo" class="brand__logo" />
+    </router-link>
   </nav>
 </template>
 
-<script>
-export default {
-  name: 'Navbar'
-}
-</script>
-
 <style scoped>
 .navbar {
-  background-color: rgba(243, 243, 243, 0.49);
-  padding: 20px;
-  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
 }
 
-.logo {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
+/* Make logo + text stay on one line and center-align vertically */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  text-decoration: none;
+  color: inherit;
+  line-height: 1;
+}
+
+/* Constrain the logo size so it doesn't dominate */
+.brand__logo {
+  height: 200px;
+  width: auto;
+  display: block;
+}
+
+/* Make the name look like a proper brand */
+.brand__text {
+  font-weight: 900;
+  font-size: 1.125rem;     /* ~18px */
+  letter-spacing: .2px;
 }
 </style>
+<script setup lang="ts">
+</script>

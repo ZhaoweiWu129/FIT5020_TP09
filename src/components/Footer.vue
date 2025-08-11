@@ -3,10 +3,14 @@
     <div class="footer-container">
       <!-- Logo + description -->
       <div class="footer-left">
-        <h2 class="logo">ParkAgile</h2>
-        <p class="description">
+        <div class="footer-brand">
+          <img src="@/assets/Logo1.png" alt="ParkAgile Logo" class="footer-logo" />
+          <span class="footer-name">ParkAgile</span>
+        </div>
+        <p class="footer-description">
           Our vision is to provide convenience and help increase your parking efficiency.
         </p>
+
       </div>
 
       <!-- Link sections -->
@@ -120,4 +124,23 @@ export default {
   text-decoration: none;
   color: #666;
 }
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px; /* space before description */
+}
+
+.footer-logo {
+  height: 28px; /* adjust to match navbar */
+  width: auto;
+}
+
+.footer-name {
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.2px;
+}
+
 </style>
