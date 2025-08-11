@@ -35,6 +35,7 @@ const mapEl = ref(null);
 //list for stored
 const stationsList = ref([]);
 const parkRideList = ref([]);
+const parkingList = ref([]);
 
 let map, routeLayer, markers = [];
 let stationLayer;
@@ -183,7 +184,7 @@ async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
 
   const data = await res.json(); // array of parkings
 
-
+  parkingList.value = data;
   destParkingLayer.clearLayers();
   data.forEach(p => {
     const { lat: cenLat, long: cenLng } = p.parking_area_centroid;
@@ -312,22 +313,42 @@ function clearRoute() {
       <div class="card route__map">
         <div id="map" ref="mapEl"></div>
       </div>
+
       <!-- Stations -->
-      <h3>Stations</h3>
-      <ul v-if="stationsList.length">
-        <li v-for="(s,i) in stationsList" :key="s['@id'] || s.id || i">
-          {{ s.name || 'Station' }}
-        </li>
-      </ul>
+      <template v-if="stationsList.length">
+        <h3>Stations</h3>
+        <div class="scroll-list">
+          <ul>
+            <li v-for="(s,i) in stationsList" :key="s.id || s['@id'] || i">
+              {{ s.name || 'Station' }} ({{ Math.round(s.distance_m) }}m from route)
+            </li>
+          </ul>
+        </div>
+      </template>
 
       <!-- Park & Ride -->
-      <h3>Park & Ride</h3>
-      <ul v-if="parkRideList && parkRideList.length">
-        <li v-for="(p,i) in parkRideList" :key="p.id || p.zone_id || i">
-          {{ p.zone_name || p.name || ('Near ' + (p.nearest_train_station_name || 'station')) }}
-        </li>
-      </ul>
+      <template v-if="parkRideList && parkRideList.length">
+        <h3>Park & Ride</h3>
+        <div class="scroll-list">
+          <ul>
+            <li v-for="(p,i) in parkRideList" :key="p.id || p.zone_id || i">
+              {{ p.zone_name || p.name || ('Near ' + (p.nearest_train_station_name || 'station')) }}
+            </li>
+          </ul>
+        </div>
+      </template>
 
+      <!-- Public Parking -->
+      <template v-if="parkingList && parkingList.length">
+        <h3>Public Parking Near Destination</h3>
+        <div class="scroll-list">
+          <ul>
+            <li v-for="(p,i) in parkingList" :key="p.id || i">
+              {{ p.name || 'Parking' }} ({{ Math.round(p.distance_meters) }}m from destination)
+            </li>
+          </ul>
+        </div>
+      </template>
 
     </div>
   </section>
@@ -353,6 +374,37 @@ function clearRoute() {
   grid-template-columns: 1fr;
   gap: 16px;
 }
+
+/* .route__grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 16px;
+  align-items: start;
+} */
+
+.scroll-list {
+  max-height: 180px;
+  overflow-y: auto;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  padding: 6px 0;
+  border: 1px solid #e5e7eb;
+}
+.scroll-list ul {
+  margin: 0;
+  padding: 0 12px;
+  list-style: none;
+}
+.scroll-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+}
+.scroll-list li:last-child {
+  border-bottom: none;
+}
+
 @media (min-width: 960px) {
   .route__grid { grid-template-columns: 380px 1fr; }
 }

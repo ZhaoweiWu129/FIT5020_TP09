@@ -1,11 +1,13 @@
 # cbd-parking-landing
 
 ## Project setup
+
+For building and locally testing the frontend, run this at the repository directory:
 ```
 npm install
 ```
 
-To begin the backend, postgreSQL database and graphhopper instance, simply run this at the repository directory-level
+To begin the frontend, backend and postgreSQL database services locally, simply run this at the repository directory-level
 ```
 docker compose up -d --build
 ```
