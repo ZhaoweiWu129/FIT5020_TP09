@@ -3,7 +3,7 @@ import { onMounted, nextTick, ref } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 //api for https
-const API_BASE = process.env.VUE_APP_API_BASE || '';
+// const API_BASE = process.env.VUE_APP_API_BASE || '';
 
 //Icon URLs and markers
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -123,7 +123,7 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
   if (!parkRideLayer) parkRideLayer = L.layerGroup().addTo(map);
 
   //Fetch from backend py file park and ride function
-  const res = await fetch(`${API_BASE}/park_ride`, {
+  const res = await fetch(`/park_ride`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -136,15 +136,15 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
 
   parkRideLayer.clearLayers();
   (data.park_and_ride || []).forEach(p => {
-    // backend returns centroid as "nearest_station_centroid" (it is the polygon centroid)
-    const { lat, long } = p.nearest_station_centroid;
+    // backend returns centroid as "parking_area_centroid" (it is the polygon centroid)
+    const { lat, long } = p.parking_area_centroid;
     //marker for parkRide
     L.marker([lat, long],{icon:ParkRideIcon})
         //Park and ride marker
         .bindPopup(
             `<b>${p.zone_name ?? 'Park & Ride'}</b><br>
          Nearest station: ${p.nearest_train_station_name}<br>
-         ~${Math.round(p.distance_meters)} m from route`
+         ~${Math.round(p.parking_to_station_meters)} m from route`
         )
         .addTo(parkRideLayer);
   });
@@ -152,7 +152,7 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
 async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
   if (!destParkingLayer) destParkingLayer = L.layerGroup().addTo(map);
 
-  const res = await fetch(`${API_BASE}/parking/near_location`, {
+  const res = await fetch(`/parking/near_location`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -167,7 +167,7 @@ async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
   data.forEach(p => {
     const { lat: cenLat, long: cenLng } = p.parking_area_centroid;
     L.marker([cenLat, cenLng],{icon:ParkIcon})
-        .bindPopup(`${p.name ?? 'Parking'} – ${Math.round(p.distance_meters)} m`)
+        .bindPopup(`${p.name ?? 'Parking'} – ${Math.round(p.parking_to_station_meters)} m`)
         .addTo(destParkingLayer);
   });
 }
@@ -213,7 +213,7 @@ async function getRoute() {
     // Call backend: find parking near the start point of the route first function from
     try {
       const startLatLng = coords[0]; // coords is [[lat, lng], ...]
-      const res = await fetch('${API_BASE}/parking/near_location', {
+      const res = await fetch('/parking/near_location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -227,7 +227,7 @@ async function getRoute() {
         const { lat, long } = p.parking_area_centroid;
         L.marker([lat, long])
             .addTo(map)
-            .bindPopup(`${p.name || 'Parking'} • ${Math.round(p.distance_meters)} m`);
+            .bindPopup(`${p.name || 'Parking'} • ${Math.round(p.parking_to_station_meters)} m`);
       });
     } catch (err) {
       console.error('Error fetching parking:', err);

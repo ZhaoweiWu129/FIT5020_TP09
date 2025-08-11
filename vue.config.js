@@ -7,7 +7,7 @@ module.exports = defineConfig({
     proxy: {
       // forward API calls to the backend
       '^/(parking|stations|park_ride)': {
-        target: 'http://localhost:8000',
+        target: process.env.VUE_APP_API_BASE || 'http://localhost:8000/',
         changeOrigin: true,
       },
     },

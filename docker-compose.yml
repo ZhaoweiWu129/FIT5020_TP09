@@ -19,6 +19,14 @@ services:
       DATABASE_URL: postgresql+psycopg://postgres:pass@db:5432/melb
     ports:
       - "8000:8000"
+  
+  frontend:
+    build:
+      context: .
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
 
   graphhopper:
     build: ./graphhopper
