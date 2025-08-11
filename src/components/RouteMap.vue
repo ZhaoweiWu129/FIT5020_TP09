@@ -301,7 +301,7 @@ function clearRoute() {
         <label>Max. distance of Park & Ride zones from your route: {{ maxDistanceParkRide }}m</label>
         <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParkRide" />
 
-        <label>Max. Distance of public parking spaces from your destination: {{ maxDistanceParking }}m</label>
+        <label>Max. distance of public parking spaces from your destination: {{ maxDistanceParking }}m</label>
         <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParking" />
 
         <div class="actions">
