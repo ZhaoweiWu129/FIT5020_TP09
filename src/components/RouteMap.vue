@@ -61,9 +61,10 @@ async function geocode(address) {
   if (!res.ok) throw new Error(`Geocode failed: ${res.status}`);
   const data = await res.json();
   if (!data.length) throw new Error(`No match for: ${address}`);
-  const { lat, lon, name } = data[0];
+  const { lat, lon, name, display_name } = data[0];
   // NOTE: OSRM expects lon,lat order
-  return [parseFloat(lon), parseFloat(lat), name];
+  const display_name_ = display_name.split(',').slice(0, 3).join(', ');
+  return [parseFloat(lon), parseFloat(lat), name == '' ? display_name_ : name];
 }
 
 function sampleRoutePoints(lngLatCoords, maxSamples = 20, stride = 12) {
