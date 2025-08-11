@@ -7,10 +7,6 @@
           <p class="hero__lead">
             Drive to a nearby station, then ride into the CBD by train, tram, or bus.
           </p>
-          <div class="hero__actions">
-            <button class="btn btn-primary">Try Now</button>
-            <button class="btn btn-ghost">See all car ownership</button>
-          </div>
         </div>
         <div class="hero__right">
           <img src="@/assets/Hero.jpg" alt="front" class = "front" />

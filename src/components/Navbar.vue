@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar">
     <div class="navbar-content">
-      <h1 class="logo">Melbourne Parking</h1>
+      <h1 class="logo">AgilePark</h1>
     </div>
   </nav>
 </template>

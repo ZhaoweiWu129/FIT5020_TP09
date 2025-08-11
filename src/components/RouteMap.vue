@@ -32,6 +32,10 @@ const start = ref('Boxhill, Melbourne');
 const end   = ref('Flinders Street, Melbourne');
 const summary = ref(null);
 const mapEl = ref(null);
+//list for stored
+const stationsList = ref([]);
+const parkRideList = ref([]);
+
 let map, routeLayer, markers = [];
 let stationLayer;
 let parkRideLayer;
@@ -90,6 +94,9 @@ async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) 
 
   for (let i = 0; i < samples.length; i += batchSize) {
     const batch = samples.slice(i, i + batchSize);
+    // Build the stations list from the merged results
+    stationsList.value = Array.from(byId.values());
+
     const calls = batch.map(([lng, lat]) =>
         //Fetch from backend py file near start location function
         fetch(`/stations/near_location`, {
@@ -105,6 +112,8 @@ async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) 
     );
 
     const results = await Promise.all(calls);
+
+
     results.forEach(({ stations }) => {
       stations.forEach(s => {
         const prev = byId.get(s.id);
@@ -137,6 +146,8 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
   });
   if (!res.ok) { console.warn('park_ride failed'); return; }
   const data = await res.json(); // { park_and_ride: [...] }
+  parkRideList.value = data.park_and_ride || []
+
 
   parkRideLayer.clearLayers();
   (data.park_and_ride || []).forEach(p => {
@@ -169,7 +180,9 @@ async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
     })
   });
   if (!res.ok) { console.warn('parking near dest failed'); return; }
+
   const data = await res.json(); // array of parkings
+
 
   destParkingLayer.clearLayers();
   data.forEach(p => {
@@ -299,6 +312,23 @@ function clearRoute() {
       <div class="card route__map">
         <div id="map" ref="mapEl"></div>
       </div>
+      <!-- Stations -->
+      <h3>Stations</h3>
+      <ul v-if="stationsList.length">
+        <li v-for="(s,i) in stationsList" :key="s['@id'] || s.id || i">
+          {{ s.name || 'Station' }}
+        </li>
+      </ul>
+
+      <!-- Park & Ride -->
+      <h3>Park & Ride</h3>
+      <ul v-if="parkRideList && parkRideList.length">
+        <li v-for="(p,i) in parkRideList" :key="p.id || p.zone_id || i">
+          {{ p.zone_name || p.name || ('Near ' + (p.nearest_train_station_name || 'station')) }}
+        </li>
+      </ul>
+
+
     </div>
   </section>
 </template>

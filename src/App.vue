@@ -16,5 +16,7 @@ export default {
 </script>
 
 <style>
-/* Optional: Global styles here */
+html, body, #app {
+  font-family: "Quicksand", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
 </style>
