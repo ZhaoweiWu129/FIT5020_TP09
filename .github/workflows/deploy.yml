@@ -2,7 +2,7 @@ name: Deploy Vue CLI to S3 + CloudFront
 
 on:
   push:
-    branches: [ master ]   # <- keep master if that's your branch
+    branches: [ master ]
 
 jobs:
   deploy:
