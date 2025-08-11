@@ -36,7 +36,9 @@ let map, routeLayer, markers = [];
 let stationLayer;
 let parkRideLayer;
 let destParkingLayer;
-
+const maxDistanceStations = ref(600)
+const maxDistanceParkRide = ref(800)
+const maxDistanceParking = ref(600)
 
 onMounted(async () => {
   await nextTick();
@@ -166,10 +168,20 @@ async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
   destParkingLayer.clearLayers();
   data.forEach(p => {
     const { lat: cenLat, long: cenLng } = p.parking_area_centroid;
-    L.marker([cenLat, cenLng],{icon:ParkIcon})
-        .bindPopup(`${p.name ?? 'Parking'} – ${Math.round(p.parking_to_station_meters)} m`)
+
+    const dist = Number.isFinite(p.parking_to_station_meters)
+        ? `${Math.round(p.parking_to_station_meters)} m`
+        : '';
+
+    const popupText = p.name
+        ? `Parking - ${dist || ''}`.trim()
+        : `Parking${dist ? ' - ' + dist : ''}`;
+
+    L.marker([cenLat, cenLng], { icon: ParkIcon })
+        .bindPopup(popupText)
         .addTo(destParkingLayer);
   });
+
 }
 
 
@@ -201,9 +213,10 @@ async function getRoute() {
     // For backend fetch (lng,lat as OSRM gives them)
     const rawCoords = routeData.geometry.coordinates;
     //Distance fetch within range
-    await fetchStationsAlongRouteFrontend(rawCoords, 600);
-    await fetchParkRideAlongRoute(rawCoords, 800);
-    await fetchParkingNearPoint(toLonLat[1], toLonLat[0], 600);
+    await fetchStationsAlongRouteFrontend(rawCoords, maxDistanceStations.value)
+    await fetchParkRideAlongRoute(rawCoords, maxDistanceParkRide.value)
+    await fetchParkingNearPoint(toLonLat[1], toLonLat[0], maxDistanceParking.value)
+
 
     // Markers
     markers.push(L.marker([fromLonLat[1], fromLonLat[0]]).addTo(map));
@@ -274,7 +287,14 @@ function clearRoute() {
         <div class="summary" v-if="summary">
           <div class="summary__pill">Time: {{ summary.duration }}  Distance: {{ summary.distance }}</div>
         </div>
+          <label>Stations Distance: {{ maxDistanceStations }}m</label>
+          <input type="range" min="100" max="2000" step="50" v-model="maxDistanceStations" />
 
+          <label>Park & Ride Distance: {{ maxDistanceParkRide }}m</label>
+          <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParkRide" />
+
+          <label>Parking Distance: {{ maxDistanceParking }}m</label>
+          <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParking" />
       </form>
 
       <div class="card route__map">
