@@ -1,4 +1,6 @@
-# cbd-parking-landing
+# ParkAgile
+
+Our platform
 
 ## Project setup
 
@@ -29,3 +31,7 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### Currently hosted at:
+
+https://d12dozp8bilpnw.cloudfront.net/
