@@ -314,41 +314,43 @@ function clearRoute() {
         <div id="map" ref="mapEl"></div>
       </div>
 
-      <!-- Stations -->
-      <template v-if="stationsList.length">
-        <h3>Stations</h3>
-        <div class="scroll-list">
-          <ul>
-            <li v-for="(s,i) in stationsList" :key="s.id || s['@id'] || i">
-              {{ s.name || 'Station' }} ({{ Math.round(s.distance_m) }}m from route)
-            </li>
-          </ul>
-        </div>
-      </template>
+      <div v-if="stationsList.length || parkRideList.length || parkingList.length"  class="card results-info"> 
+        <!-- Stations -->
+        <template v-if="stationsList.length">
+          <h3>Stations</h3>
+          <div class="scroll-list">
+            <ul>
+              <li v-for="(s,i) in stationsList" :key="s.id || s['@id'] || i">
+                {{ s.name || 'Station' }} ({{ Math.round(s.distance_m) }}m from route)
+              </li>
+            </ul>
+          </div>
+        </template>
 
-      <!-- Park & Ride -->
-      <template v-if="parkRideList && parkRideList.length">
-        <h3>Park & Ride</h3>
-        <div class="scroll-list">
-          <ul>
-            <li v-for="(p,i) in parkRideList" :key="p.id || p.zone_id || i">
-              {{ p.zone_name || p.name || ('Near ' + (p.nearest_train_station_name || 'station')) }}
-            </li>
-          </ul>
-        </div>
-      </template>
+        <!-- Park & Ride -->
+        <template v-if="parkRideList && parkRideList.length">
+          <h3>Park & Ride</h3>
+          <div class="scroll-list">
+            <ul>
+              <li v-for="(p,i) in parkRideList" :key="p.id || p.zone_id || i">
+                {{ p.zone_name || p.name || ('Near ' + (p.nearest_train_station_name || 'station')) }}
+              </li>
+            </ul>
+          </div>
+        </template>
 
-      <!-- Public Parking -->
-      <template v-if="parkingList && parkingList.length">
-        <h3>Public Parking Near Destination</h3>
-        <div class="scroll-list">
-          <ul>
-            <li v-for="(p,i) in parkingList" :key="p.id || i">
-              {{ p.name || 'Parking' }} ({{ Math.round(p.distance_meters) }}m from destination)
-            </li>
-          </ul>
-        </div>
-      </template>
+        <!-- Public Parking -->
+        <template v-if="parkingList && parkingList.length">
+          <h3>Public Parking Near Destination</h3>
+          <div class="scroll-list">
+            <ul>
+              <li v-for="(p,i) in parkingList" :key="p.id || i">
+                {{ p.name || 'Parking' }} ({{ Math.round(p.distance_meters) }}m from destination)
+              </li>
+            </ul>
+          </div>
+        </template>
+      </div>
 
     </div>
   </section>
@@ -358,7 +360,7 @@ function clearRoute() {
 :root { --bg: #f7f7fb; --card: #ffffff; --ink: #1f2937; --muted:#6b7280; --brand: #02a2ff; --brand-700:#2563eb; }
 
 .route {
-  max-width: 1100px;
+  /* max-width: 1100px; */
   margin: 24px auto;
   padding: 16px;
 }
@@ -371,8 +373,9 @@ function clearRoute() {
 }
 .route__grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 380px 1fr 320px;
   gap: 16px;
+  align-items: stretch;
 }
 
 /* .route__grid {
@@ -381,6 +384,13 @@ function clearRoute() {
   gap: 16px;
   align-items: start;
 } */
+
+.results-info {
+  padding: 16px;
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.06);
+}
 
 .scroll-list {
   max-height: 180px;
@@ -406,7 +416,7 @@ function clearRoute() {
 }
 
 @media (min-width: 960px) {
-  .route__grid { grid-template-columns: 380px 1fr; }
+  .route__grid { grid-template-columns: 380px 1fr 320px; }
 }
 
 .card {
@@ -425,7 +435,12 @@ function clearRoute() {
   box-sizing: border-box;
   gap: 12px;                 /* equal spacing between fields/buttons */
 }
-.route__map { padding: 12px; }
+.route__map { 
+  /* padding: 12px;  */
+  height: 100%;      /* <-- add this */
+  display: flex;     /* <-- add this for child stretching */
+  flex-direction: column;
+}
 
 .field { display: grid; gap: 6px; margin-bottom: 12px; }
 .field__label { font-size: 13px; color: var(--muted); }
@@ -475,7 +490,7 @@ function clearRoute() {
 
 #map {
   width: 100%;
-  height: 520px;              /* taller, feels premium */
+  height: 100%;              /* taller, feels premium */
   border-radius: 12px;
   overflow: hidden;
 }
