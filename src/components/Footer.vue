@@ -38,17 +38,19 @@ export default {
 
 <style scoped>
 .footer {
-  background-color: #dce3ed;
+  background-color: rgb(14, 14, 19);
   padding: 40px 20px 20px;
+  margin: 0%;
+  max-width: 100%;
   font-family: sans-serif;
-  color: #333;
+  color: #868686;
 }
 
 .footer-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  max-width: 1200px;
+  max-width: 88vw;
   margin: auto;
   gap: 40px;
 }
@@ -112,7 +114,7 @@ export default {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  max-width: 1200px;
+  max-width: 88vw;
   margin-left: auto;
   margin-right: auto;
   font-size: 13px;

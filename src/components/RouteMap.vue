@@ -294,8 +294,8 @@ function clearRoute() {
         <div class="summary" v-if="summary">
           <div class="summary__pill">Time: {{ summary.duration }}  Distance: {{ summary.distance }}</div>
         </div>
-        <hr />
-        <label>Display Filters</label>
+        <!-- <hr /> -->
+        <h3>Display Filters</h3>
         <label>Max. distance of stations from your route: {{ maxDistanceStations }}m</label>
         <input type="range" min="100" max="2000" step="50" v-model="maxDistanceStations" />
 
@@ -304,7 +304,7 @@ function clearRoute() {
 
         <label>Max. distance of public parking spaces from your destination: {{ maxDistanceParking }}m</label>
         <input type="range" min="100" max="2000" step="50" v-model="maxDistanceParking" />
-
+        <br/>
         <div class="actions">
           <button class="btn btn--primary" type="submit">Get Route</button>
         </div>
@@ -314,7 +314,7 @@ function clearRoute() {
         <div id="map" ref="mapEl"></div>
       </div>
 
-      <div v-if="stationsList.length || parkRideList.length || parkingList.length"  class="card results-info"> 
+      <div v-if="stationsList.length || parkRideList.length || parkingList.length"  class="results-info"> 
         <!-- Stations -->
         <template v-if="stationsList.length">
           <h3>Stations</h3>
@@ -360,7 +360,7 @@ function clearRoute() {
 :root { --bg: #f7f7fb; --card: #ffffff; --ink: #1f2937; --muted:#6b7280; --brand: #02a2ff; --brand-700:#2563eb; }
 
 .route {
-  /* max-width: 1100px; */
+  max-width: 92vw;
   margin: 24px auto;
   padding: 16px;
 }
@@ -369,6 +369,7 @@ function clearRoute() {
   font-weight: 700;
   color: var(--ink);
   margin: 0 0 16px;
+  padding-left: 1.4vw;
   letter-spacing: .2px;
 }
 .route__grid {
@@ -387,19 +388,22 @@ function clearRoute() {
 
 .results-info {
   padding: 16px;
-  background: var(--card);
+  background-color: rgba(63, 63, 83, 0.719);
   border-radius: 24px;
   box-shadow: 0 4px 12px rgba(0,0,0,.06);
+  align-self: flex-start;
 }
 
 .scroll-list {
   max-height: 180px;
   overflow-y: auto;
-  background: #f9fafb;
+  /* background: rgba(0, 0, 0, 0.774); */
   border-radius: 8px;
   margin-bottom: 16px;
   padding: 6px 0;
-  border: 1px solid #e5e7eb;
+  /* border: 1px solid #e5e7eb; */
+  background-color: rgba(71, 71, 94, 0.719);
+  color: #e5e7eb;
 }
 .scroll-list ul {
   margin: 0;
@@ -408,7 +412,7 @@ function clearRoute() {
 }
 .scroll-list li {
   padding: 6px 0;
-  border-bottom: 1px solid #f3f4f6;
+  /* border-bottom: 1px solid #f3f4f6; */
   font-size: 14px;
 }
 .scroll-list li:last-child {
@@ -447,6 +451,8 @@ function clearRoute() {
 .field__input {
   height: 42px; padding: 0 12px; border-radius: 10px;
   border: 1px solid rgba(17,24,39,.12); outline: none; font-size: 14px;
+  background-color: rgba(53, 53, 70, 0.719);
+  color: #e5e7eb;
 }
 .field__input:focus {
   border-color: var(--brand);

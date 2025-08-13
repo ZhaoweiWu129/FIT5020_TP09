@@ -1,5 +1,17 @@
 <template>
+
   <section class="hero">
+
+    <!-- Background video -->
+    <video
+      ref="bgVideo"
+      class="hero-bg-video"
+      autoplay
+      muted
+      playsinline
+      @ended="playNextVideo"
+    ></video>
+
     <div class="hero__band">
       <div class="hero__grid">
         <div class="hero__left">
@@ -8,12 +20,20 @@
             Drive to a nearby station, then ride into the CBD by train, tram, or bus.
           </p>
         </div>
-        <div class="hero__right">
+        <!-- <div class="hero__right">
           <img src="@/assets/Hero.jpg" alt="front" class = "front" />
-        </div>
+        </div> -->
 
       </div>
     </div>
+
+    <button class="down-arrow" @click="scrollToNextSection" aria-label="Scroll down">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <!-- <circle cx="20" cy="20" r="20" fill="#fff" opacity="0.85"/> -->
+        <path d="M12 18l8 8 8-8" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
   </section>
 </template>
 
@@ -23,15 +43,48 @@
   --muted:#616975;
 }
 
+video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.hero__band {
+  position: relative;
+  z-index: 2; /* on top of video */
+  color: white;
+}
+
 .hero {
+  min-height: 88vh; /* nearly full viewport height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background-size: cover;
   border-radius: 22px;
   overflow: hidden;
   box-shadow: 0 18px 50px rgba(0,0,0,.12);
+  position: relative; /* Needed for absolute positioning of button */
+  text-align: center;
+  top: 40;
+  margin: 0vh 0.8vw;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.753) 0%, rgba(24, 28, 38, 0.0) 70%);
 }
 
 .hero__grid, .hero__wrap, .hero__inner {
-  max-width: 1200px;
+  /* max-width: 1200px; */
   margin: 0 auto;
   padding: clamp(56px, 7vw, 110px) 28px;
   display: grid;
@@ -44,6 +97,7 @@
 .hero__left{
   max-width: 560px;
 }
+
 .hero__title{
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -52,12 +106,14 @@
   margin: 0 0 14px;
   color: var(--ink);
 }
+
 .hero__lead{
   color: var(--muted);
   font-size: clamp(16px, 1.9vw, 20px);
   line-height: 1.7;
   margin: 0 0 26px;
 }
+
 .hero__actions{ display:flex; gap:12px; flex-wrap:wrap; }
 .btn{ padding: 14px 18px; border-radius: 10px; font-weight: 700; }
 
@@ -121,7 +177,27 @@
 .hero__right:hover img{ opacity: 0; }     /* fade front out */
 .hero__right:hover::after{ opacity: 1; }  /* fade back in */
 
+.down-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(43, 43, 43, 0.452);
+  border: none;
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: 98%;
+  z-index: 10;
+  cursor: pointer;
+  transition: filter 0.2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-radius: 12px;
+}
 
+.down-arrow:hover {
+  background: rgba(39, 39, 39, 0.521);
+}
 
 .topbar, header.navbar, .site-header{
   background:#f3f4f6;
@@ -145,3 +221,48 @@
 }
 </style>
 
+<script setup>
+import { ref, onMounted } from 'vue';
+
+const videos = [
+  require('@/assets/vid/train1.mp4'),
+  require('@/assets/vid/train2.mp4'),
+  require('@/assets/vid/train3.mp4')
+];
+const currentIndex = ref(0);
+const bgVideo = ref(null);
+
+function playVideo(index) {
+  const videoEl = bgVideo.value;
+  if (videoEl) {
+    videoEl.src = videos[index];
+    videoEl.play().catch(err => {
+      console.error("Video play failed:", err);
+    });
+  }
+}
+
+function playNextVideo() {
+  currentIndex.value = (currentIndex.value + 1) % videos.length;
+  playVideo(currentIndex.value);
+}
+
+onMounted(() => {
+  playVideo(currentIndex.value);
+});
+
+function scrollToNextSection() {
+  // Find the next sibling section after .hero
+  const heroSection = document.querySelector('.hero');
+  if (!heroSection) return;
+  let next = heroSection.nextElementSibling;
+  // If next is not a section, keep searching
+  while (next && next.tagName !== 'SECTION') {
+    next = next.nextElementSibling;
+  }
+  if (next) {
+    next.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+</script>
