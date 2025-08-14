@@ -454,8 +454,20 @@ function clearRoute() {
   border-bottom: none;
 }
 
-@media (min-width: 960px) {
-  .route__grid { grid-template-columns: 380px 1fr 320px; }
+@media (max-width: 960px) {
+  .route__grid { 
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .results-info, .card {
+    margin-bottom: 18px;
+  }
+
+  #map {
+    height: 320px; /* Adjusted for smaller screens */
+    min-height: 220px; /* Ensure it doesn't shrink too small */
+  }
 }
 
 .card {

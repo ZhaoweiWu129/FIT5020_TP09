@@ -10,9 +10,9 @@ import DataInsight from "@/views/DataInsight.vue";
 Vue.use(VueRouter)
 
 const routes = [
-    { path: '/', name: 'Landing', component: Landing },
-    { path: '/route', name: 'Route', component: RouteView },
-    { path: '/data-insight', name: 'DataInsight', component: DataInsight },
+    { path: '/', meta: { title: 'ParkAgile' },  component: Landing },
+    { path: '/route', meta: { title: 'Park & Ride options' }, component: RouteView },
+    { path: '/data-insight', meta: { title: 'Data Insights' }, component: DataInsight },
 ]
 
 const router = new VueRouter({

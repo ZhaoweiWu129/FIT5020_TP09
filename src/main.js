@@ -5,6 +5,11 @@ import 'leaflet/dist/leaflet.css';
 
 Vue.config.productionTip = false
 
+
+router.afterEach((to) => {
+  document.title = to.meta.title || 'Default Title';
+});
+
 new Vue({
   router,
   render: h => h(App),

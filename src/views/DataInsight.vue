@@ -350,9 +350,19 @@ export default {
   background: #161b25;
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 16px;
-  height: 660px;
+  height: 60vh;
   padding: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,.22);
+}
+
+@media (max-width: 768px) {
+  .insight {
+    max-width: 100%;
+    padding: 12px;
+  }
+  .chart-card {
+    height: 50vh;
+  }
 }
 
 /* Pop animation for metric */
