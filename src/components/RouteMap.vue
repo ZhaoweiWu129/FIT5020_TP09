@@ -36,6 +36,7 @@ const mapEl = ref(null);
 const stationsList = ref([]);
 const parkRideList = ref([]);
 const parkingList = ref([]);
+const loading = ref(false);
 
 let map, routeLayer, markers = [];
 let stationLayer;
@@ -88,6 +89,9 @@ function sampleRoutePoints(lngLatCoords, maxSamples = 20, stride = 12) {
 async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) {
   if (!lngLatCoords?.length) return;
   if (!stationLayer) stationLayer = L.layerGroup().addTo(map);
+  
+  stationsList.value = [];
+  stationLayer.clearLayers();
 
   const samples = sampleRoutePoints(lngLatCoords, 20, 12);
   const byId = new Map();
@@ -114,7 +118,6 @@ async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) 
 
     const results = await Promise.all(calls);
 
-
     results.forEach(({ stations }) => {
       stations.forEach(s => {
         const prev = byId.get(s.id);
@@ -123,7 +126,6 @@ async function fetchStationsAlongRouteFrontend(lngLatCoords, maxdistance = 600) 
     });
   }
 
-  stationLayer.clearLayers();
   Array.from(byId.values()).forEach(s => {
     //Marker for station
     L.marker([s.location.lat, s.location.long],{icon:stationIcon})
@@ -136,6 +138,9 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
   if (!parkRideLayer) parkRideLayer = L.layerGroup().addTo(map);
   if (!stationLayer) stationLayer = L.layerGroup().addTo(map);
 
+  parkRideList.value = [];
+  parkRideLayer.clearLayers();
+
   //Fetch from backend py file park and ride function
   const res = await fetch(`/park_ride`, {
     method: 'POST',
@@ -145,12 +150,13 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
       coordinates: rawLngLatCoords // IMPORTANT: [lng,lat] as returned by OSRM
     })
   });
-  if (!res.ok) { console.warn('park_ride failed'); return; }
+  if (!res.ok) { 
+    console.warn('park_ride failed'); 
+    return; 
+  }
   const data = await res.json(); // { park_and_ride: [...] }
-  parkRideList.value = data.park_and_ride || []
+  parkRideList.value = data.park_and_ride || [];
 
-
-  parkRideLayer.clearLayers();
   (data.park_and_ride || []).forEach(p => {
     // backend returns centroid as "parking_area_centroid" (it is the polygon centroid)
     const { lat, long } = p.parking_area_centroid;
@@ -171,6 +177,8 @@ async function fetchParkRideAlongRoute(rawLngLatCoords, maxdistance = 800) {
 }
 async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
   if (!destParkingLayer) destParkingLayer = L.layerGroup().addTo(map);
+  destParkingLayer.clearLayers();
+  parkingList.value = [];
 
   const res = await fetch(`/parking/near_location`, {
     method: 'POST',
@@ -180,12 +188,15 @@ async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
       coordinates: { lat, long: lng }
     })
   });
-  if (!res.ok) { console.warn('parking near dest failed'); return; }
+  if (!res.ok) { 
+    console.warn('no parking found near dest'); 
+    return; 
+  }
 
   const data = await res.json(); // array of parkings
 
   parkingList.value = data;
-  destParkingLayer.clearLayers();
+  
   data.forEach(p => {
     const { lat: cenLat, long: cenLng } = p.parking_area_centroid;
     L.marker([cenLat, cenLng],{icon:ParkIcon})
@@ -197,6 +208,7 @@ async function fetchParkingNearPoint(lat, lng, maxdistance = 600) {
 
 async function getRoute() {
   try {
+    loading.value = true; // Show loading overlay
     clearRoute();
     const [fromLonLat, toLonLat] = await Promise.all([
       geocode(start.value),
@@ -266,6 +278,8 @@ async function getRoute() {
   } catch (e) {
     console.error(e);
     alert(e.message);
+  } finally {
+    loading.value = false; // Hide loading overlay
   }
 }
 
@@ -310,12 +324,16 @@ function clearRoute() {
         </div>
       </form>
 
-      <div class="card route__map">
+      <div class="card route__map" style="position:relative;">
         <div id="map" ref="mapEl"></div>
+        <div v-if="loading" class="map-loading-overlay">
+          <div class="spinner"></div>
+          <span class="loading-text">Loading results...</span>
+        </div>
       </div>
 
       <!-- Always show the panel + section titles; only render lists when they have items -->
-      <div class="results-info">
+      <div v-if="stationsList.length || parkRideList.length || parkingList.length" class="results-info">
         <!-- Stations -->
         <section class="results-section">
           <h3>Stations</h3>
@@ -325,6 +343,9 @@ function clearRoute() {
                 {{ s.name || 'Station' }} ({{ Math.round(s.distance_m) }}m from route)
               </li>
             </ul>
+          </div>
+          <div v-else class="scroll-list">
+            <p>No train stations found along this route within {{ maxDistanceStations }}m.</p>
           </div>
         </section>
 
@@ -338,6 +359,9 @@ function clearRoute() {
               </li>
             </ul>
           </div>
+          <div v-else class="scroll-list">
+            <p>No Park & Ride zones found along this route within {{ maxDistanceParkRide }}m.</p>
+          </div>
         </section>
 
         <!-- Public Parking -->
@@ -349,6 +373,9 @@ function clearRoute() {
                 {{ p.name || 'Parking' }} ({{ Math.round(p.distance_meters) }}m from destination)
               </li>
             </ul>
+          </div>
+          <div v-else class="scroll-list">
+            <p>No public parking zones found near the destination within {{ maxDistanceParking }}m.</p>
           </div>
         </section>
       </div>
@@ -416,6 +443,13 @@ function clearRoute() {
   /* border-bottom: 1px solid #f3f4f6; */
   font-size: 14px;
 }
+
+.scroll-list p {
+  padding: 6px 12px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
 .scroll-list li:last-child {
   border-bottom: none;
 }
@@ -435,14 +469,14 @@ function clearRoute() {
   flex-direction: column;
   justify-content: center;  /* center vertically */
   align-items: stretch;     /* make inputs/button full width */
-  height: 120%;
+  /* height: 120%; */
   padding: 12px;            /* consistent inner padding */
   box-sizing: border-box;
   gap: 16px;                 /* equal spacing between fields/buttons */
 }
 .route__map {
   /* padding: 12px;  */
-  height: 120%;
+  /* height: 120%; */
   display: flex;
   flex-direction: column;
 }
@@ -470,10 +504,10 @@ function clearRoute() {
   border: 0;
   cursor: pointer;
   font-weight: 600;
-  color: #616975;
+  color: #97a7c0;
 }
 .btn--primary {
-  background: linear-gradient(180deg, #3b82f6, #0048e8);
+  background: rgba(98, 98, 129, 0.719);
   color: #fff;
   height: 42px;
   border: none;
@@ -494,12 +528,48 @@ function clearRoute() {
   color: #111827;
 }
 
+.map-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(24, 28, 38, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 12px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 6px solid #2563eb;
+  border-top: 6px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+  z-index: 11;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  z-index: 11;
+}
 
 #map {
   width: 100%;
   height: 100%;              /* taller, feels premium */
   border-radius: 12px;
   overflow: hidden;
+  z-index: 1;
 }
 
 </style>

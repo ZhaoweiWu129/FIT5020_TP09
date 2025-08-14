@@ -8,8 +8,8 @@
     <!-- Right: Navigation links -->
     <div class="nav-links">
       <router-link to="/" class="nav-item">Home</router-link>
-      <router-link to="/route" class="nav-item">Park and ride</router-link>
-      <router-link to="/data-insight" class="nav-item">Data Insight</router-link>
+      <router-link to="/route" class="nav-item">Park & Ride options</router-link>
+      <router-link to="/data-insight" class="nav-item">Data Insights</router-link>
     </div>
   </nav>
 </template>

@@ -17,13 +17,14 @@
         <div class="hero__left">
           <h1 class="hero__title">Park & <span class="thin"> Ride</span></h1>
           <p class="hero__lead">
-            Drive to a nearby station, then ride into the CBD by train, tram, or bus.
+            We provide Park & Ride options based on your route to the CBD and your preferences. <br/>
+            Just drive to a train station along your route, park your car, and hop on the train to the CBD.
           </p>
           <button @click="goToRoute" class="find-route-btn">
-            Find a Route Now
+            Find Park & Ride Options Along Your Route
           </button>
           <button @click="goToData" class="find-route-btn">
-            Data Insight
+            View Data Insights
           </button>
         </div>
         <!-- <div class="hero__right">
@@ -94,6 +95,9 @@ video {
 /* Left column: stronger headline & tighter measure */
 .hero__left{
   max-width: 560px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
 .hero__title{
@@ -103,12 +107,14 @@ video {
   font-size: clamp(52px, 7.5vw, 92px);
   margin: 0 0 14px;
   color: var(--ink);
+  text-align: left; /* Align title to the left */
 }
 
 .hero__lead{
   color: var(--muted);
   font-size: clamp(16px, 1.9vw, 20px);
   line-height: 1.7;
+  text-align: left;
   margin: 0 0 26px;
 }
 
@@ -219,10 +225,10 @@ video {
 }
 
 .find-route-btn {
-  background-color: #885d00;
-  color: white;
+  background-color: rgba(127, 127, 165, 0.486);
+  color: rgb(255, 255, 255);
   padding: 12px 20px;
-  margin: 0 12px;
+  /* margin: 0 12px; */
   margin-top: 1.5rem;
   font-size: 1.1rem;
   font-weight: 500;
@@ -231,9 +237,11 @@ video {
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-width: 0;
+  flex-shrink: 1;
 }
 .find-route-btn:hover {
-  background-color: #00b354;
+  background-color: #627baa;
 }
 </style>
 
