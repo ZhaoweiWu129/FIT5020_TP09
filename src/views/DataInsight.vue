@@ -1,6 +1,6 @@
 <template>
   <section class="insight">
-    <h1 class="insight__title">Data Insight</h1>
+    <h1 class="insight__title">Data Insights</h1>
 
     <!-- Switch -->
     <div class="switch">
@@ -293,7 +293,10 @@ export default {
 
 <style scoped>
 .insight {
-  max-width: 1600px;
+  display: flex;
+  flex-direction: column;
+  max-width: 90vw;
+  max-height: 80vh;
   margin: 24px auto;
   padding: 16px;
   color: #e9edf4;

@@ -515,7 +515,7 @@ function clearRoute() {
   cursor: pointer;
   font-weight: 600;
 }
-.btn--primary:hover { filter: brightness(.98); transform: translateY(-1px); }
+.btn--primary:hover { background-color: #627baa; }
 
 .summary { margin-top: 10px; }
 .summary__pill {
