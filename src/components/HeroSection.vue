@@ -22,6 +22,9 @@
           <button @click="goToRoute" class="find-route-btn">
             Find a Route Now
           </button>
+          <button @click="goToData" class="find-route-btn">
+            Data Insight
+          </button>
         </div>
         <!-- <div class="hero__right">
           <img src="@/assets/Hero.jpg" alt="front" class = "front" />
@@ -65,7 +68,7 @@ video {
   box-shadow: 0 18px 50px rgba(0,0,0,.12);
   position: relative; /* Needed for absolute positioning of button */
   text-align: center;
-  top: 40;
+  top: 1px;
   margin: 0vh 0.8vw;
 }
 
@@ -219,10 +222,12 @@ video {
   background-color: #885d00;
   color: white;
   padding: 12px 20px;
+  margin: 0 12px;
   margin-top: 1.5rem;
   font-size: 1.1rem;
   font-weight: 500;
   border: none;
+  gap: 2px;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -271,6 +276,9 @@ export default {
   methods: {
     goToRoute() {
       this.$router.push('/route')
+    },
+    goToData() {
+      this.$router.push('/data-insight')
     }
   }
 }
