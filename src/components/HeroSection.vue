@@ -19,6 +19,9 @@
           <p class="hero__lead">
             Drive to a nearby station, then ride into the CBD by train, tram, or bus.
           </p>
+          <button @click="goToRoute" class="find-route-btn">
+            Find a Route Now
+          </button>
         </div>
         <!-- <div class="hero__right">
           <img src="@/assets/Hero.jpg" alt="front" class = "front" />
@@ -26,14 +29,6 @@
 
       </div>
     </div>
-
-    <button class="down-arrow" @click="scrollToNextSection" aria-label="Scroll down">
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-        <!-- <circle cx="20" cy="20" r="20" fill="#fff" opacity="0.85"/> -->
-        <path d="M12 18l8 8 8-8" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-
   </section>
 </template>
 
@@ -219,6 +214,22 @@ video {
     justify-self: stretch;
   }
 }
+
+.find-route-btn {
+  background-color: #885d00;
+  color: white;
+  padding: 12px 20px;
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.find-route-btn:hover {
+  background-color: #00b354;
+}
 </style>
 
 <script setup>
@@ -251,18 +262,16 @@ onMounted(() => {
   playVideo(currentIndex.value);
 });
 
-function scrollToNextSection() {
-  // Find the next sibling section after .hero
-  const heroSection = document.querySelector('.hero');
-  if (!heroSection) return;
-  let next = heroSection.nextElementSibling;
-  // If next is not a section, keep searching
-  while (next && next.tagName !== 'SECTION') {
-    next = next.nextElementSibling;
-  }
-  if (next) {
-    next.scrollIntoView({ behavior: 'smooth' });
+
+</script>
+
+<script>
+export default {
+  name: 'HeroSection',
+  methods: {
+    goToRoute() {
+      this.$router.push('/route')
+    }
   }
 }
-
 </script>

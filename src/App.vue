@@ -1,16 +1,22 @@
 <template>
-  <div id="app">
-    <LandingPage />
+  <div id="app" class="app-shell">
+    <Navbar />
+    <main class="app-content">
+      <router-view />
+    </main>
+    <Footer />
   </div>
 </template>
 
 <script>
-import LandingPage from './views/Landing.vue'
+import Navbar from "@/components/Navbar.vue";
+import Footer from "@/components/Footer.vue";
 
 export default {
   name: 'App',
   components: {
-    LandingPage
+    // eslint-disable-next-line vue/no-unused-components
+    Navbar,Footer
   }
 }
 </script>
@@ -22,5 +28,15 @@ html, body, #app {
   color: rgba(255, 255, 255, 0.9);
   margin: 0%;
   padding: 0%;
+}
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
+  display: block;
 }
 </style>

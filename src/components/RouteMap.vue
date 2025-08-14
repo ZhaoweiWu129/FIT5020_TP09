@@ -314,42 +314,43 @@ function clearRoute() {
         <div id="map" ref="mapEl"></div>
       </div>
 
-      <div v-if="stationsList.length || parkRideList.length || parkingList.length"  class="results-info"> 
+      <!-- Always show the panel + section titles; only render lists when they have items -->
+      <div class="results-info">
         <!-- Stations -->
-        <template v-if="stationsList.length">
+        <section class="results-section">
           <h3>Stations</h3>
-          <div class="scroll-list">
+          <div class="scroll-list" v-if="stationsList && stationsList.length">
             <ul>
               <li v-for="(s,i) in stationsList" :key="s.id || s['@id'] || i">
                 {{ s.name || 'Station' }} ({{ Math.round(s.distance_m) }}m from route)
               </li>
             </ul>
           </div>
-        </template>
+        </section>
 
         <!-- Park & Ride -->
-        <template v-if="parkRideList && parkRideList.length">
+        <section class="results-section">
           <h3>Park & Ride</h3>
-          <div class="scroll-list">
+          <div class="scroll-list" v-if="parkRideList && parkRideList.length">
             <ul>
               <li v-for="(p,i) in parkRideList" :key="p.id || p.zone_id || i">
                 {{ p.zone_name || p.name || ('Near ' + (p.nearest_train_station_name || 'station')) }}
               </li>
             </ul>
           </div>
-        </template>
+        </section>
 
         <!-- Public Parking -->
-        <template v-if="parkingList && parkingList.length">
+        <section class="results-section">
           <h3>Public Parking Near Destination</h3>
-          <div class="scroll-list">
+          <div class="scroll-list" v-if="parkingList && parkingList.length">
             <ul>
               <li v-for="(p,i) in parkingList" :key="p.id || i">
                 {{ p.name || 'Parking' }} ({{ Math.round(p.distance_meters) }}m from destination)
               </li>
             </ul>
           </div>
-        </template>
+        </section>
       </div>
 
     </div>
@@ -388,7 +389,7 @@ function clearRoute() {
 
 .results-info {
   padding: 16px;
-  background-color: rgba(63, 63, 83, 0.719);
+  background-color: rgb(24, 24, 31);
   border-radius: 24px;
   box-shadow: 0 4px 12px rgba(0,0,0,.06);
   align-self: flex-start;
@@ -402,7 +403,7 @@ function clearRoute() {
   margin-bottom: 16px;
   padding: 6px 0;
   /* border: 1px solid #e5e7eb; */
-  background-color: rgba(71, 71, 94, 0.719);
+  background-color: rgb(45, 45, 59);
   color: #e5e7eb;
 }
 .scroll-list ul {
@@ -434,15 +435,15 @@ function clearRoute() {
   flex-direction: column;
   justify-content: center;  /* center vertically */
   align-items: stretch;     /* make inputs/button full width */
-  height: 100%;
-  padding: 24px;            /* consistent inner padding */
+  height: 120%;
+  padding: 12px;            /* consistent inner padding */
   box-sizing: border-box;
-  gap: 12px;                 /* equal spacing between fields/buttons */
+  gap: 16px;                 /* equal spacing between fields/buttons */
 }
-.route__map { 
+.route__map {
   /* padding: 12px;  */
-  height: 100%;      /* <-- add this */
-  display: flex;     /* <-- add this for child stretching */
+  height: 120%;
+  display: flex;
   flex-direction: column;
 }
 
