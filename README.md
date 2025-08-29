@@ -1,7 +1,6 @@
-# FIT5120_Onboarding_TP09
+# FIT5120_TP09
 
-Template link https://github.com/creativetimofficial/vue-material-kit.git
-
+Welcome to FIT5120 TP09, Please select different branch to view more
 1.Install dependencies
 npm install
 2.Run the Dev Server
