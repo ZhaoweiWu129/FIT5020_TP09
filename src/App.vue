@@ -1,11 +1,22 @@
-<script setup></script>
+<script setup>
+import { ref, onMounted } from 'vue'
+import LoadingScreen from './components/LoadingScreen.vue'
+import signUrl from './assets/roadwork.png'
+
+const loading = ref(true)
+const progress = ref(0)
+
+onMounted(async () => {
+  // simulate work
+  for (let i = 0; i <= 100; i += 5) {
+    await new Promise((r) => setTimeout(r, 160))
+    progress.value = i
+  }
+  loading.value = false
+})
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <LoadingScreen :show="loading" :progress="progress" :signSrc="signUrl" />
+  <router-view />
 </template>
-
-<style scoped></style>
